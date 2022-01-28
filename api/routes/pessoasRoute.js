@@ -8,6 +8,7 @@ router.get('/pessoas', PessoaController.listaTodasAsPessoas)
 router.get('/pessoas/:id', PessoaController.buscaPessoaPorId)
 
 router.post('/pessoas', PessoaController.criaPessoa)
+router.post('/pessoas/:id/restaura', PessoaController.restauraPessoa)
 
 router.put('/pessoas/:id', PessoaController.atualizaPessoa)
 router.delete('/pessoas/:id', PessoaController.deletaPessoa)
