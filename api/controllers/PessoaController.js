@@ -1,9 +1,19 @@
 const database = require ('../models')
+const Sequelize = require ('sequelize')
 
 class PessoaController {
+    static async listaTodasAsPessoasAtivas(req, res){
+        try{
+            const pessoasAtivas = await database.Pessoas.findAll()
+            return res.status(200).json(pessoasAtivas)
+        } catch (error){
+            return res.status(500).json(error.message)
+        }
+    }
+
     static async listaTodasAsPessoas(req, res){
         try{
-            const todasAsPessoas = await database.Pessoas.findAll()
+            const todasAsPessoas = await database.Pessoas.scope('todos').findAll()
             return res.status(200).json(todasAsPessoas)
         } catch (error){
             return res.status(500).json(error.message)
@@ -110,6 +120,60 @@ class PessoaController {
             return res.status(500).json(error.message)
         }
     }
+
+    static async listaMatriculasPorEstudante (req, res){
+        const { idEstudante } = req.params
+        try {
+            const pessoa = await database.Pessoas.findOne( { where : {id: Number(idEstudante)}})
+            const matriculas = await pessoa.getAulasMatriculadas()
+            //database.Matriculas.findAll(
+            //    {
+            //        where : {estundante_id: Number(idEstudante)}
+            //    }
+            //)
+            return res.status(200).json( {matriculas} )
+        }catch(error){
+            return res.status(500).json(error.message)
+        }
+    }
+    
+    static async listaMatriculasPorTurma (req, res){
+        const { idTurma } = req.params
+        try {
+            const todasAsMatriculas = await database.Matriculas
+                .findAndCountAll({
+                    where: {
+                        turma_id: Number(idTurma),
+                        status: 'confirmado'
+                    },
+                    limite: 20,
+                    order: [['estudante_id', 'ASC']]
+                })
+            return res.status(200).json( todasAsMatriculas )
+        }catch(error){
+            return res.status(500).json(error.message)
+        }
+    }
+
+    static async listaTurmasLotadas (req, res){
+        const lotacaoPorTurma = 2
+        try {
+            const turmasLotadas = await database.Matriculas
+                .findAndCountAll({
+                    where: {
+                        status: 'confirmado'
+                    },
+                    attributes: ['turma_id'],
+                    group: ['turma_id'],
+                    having: Sequelize.literal(`count(turma_id) >= ${lotacaoPorTurma}`)
+                })
+            return res.status(200).json( turmasLotadas.count )
+        }catch(error){
+            return res.status(500).json(error.message)
+        }
+    }
+
+
 
 }
 
